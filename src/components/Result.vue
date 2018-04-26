@@ -18,16 +18,16 @@
         <el-button icon="el-icon-search" type="primary" @click="sendData">查询</el-button>
       </el-col>
     </el-row>
-    <div class="result-container" v-show="showResult === 'others'">
+    <div class="result-container" v-if="showResult === 'others'">
       <el-container class="result" v-for="(re,index) in results" :key="index">
-        <el-header height="40px">所在文档：{{re.filename}}</el-header>
+        <el-header height="40px">所在文档：{{re.fileName}}</el-header>
         <el-main>{{re.standards[0].content}}</el-main>
         <el-footer height="23px">所在章节：{{re.standards[0].index}}</el-footer>
       </el-container>
     </div>
-    <div class="result-container" v-show="showResult === 'product'">
+    <div class="result-container" v-if="showResult === 'product'">
       <el-container class="result" v-for="(re,index) in results" :key="index">
-        <el-header height="40px">标准文档：{{re.filename}}</el-header>
+        <el-header height="40px">标准文档：{{re.fileName}}</el-header>
         <el-main>
           <div class="std-container">
             指标：
@@ -59,7 +59,7 @@
   ]
 //  模拟数据(模拟按指标搜索，按产品搜索的数据)
   const MOCK_RESULT = [{
-    filename: 'GB-XX1',
+    fileName: 'GB-XX1',
     standards: [{
       name: '光效',
       content: '台灯的光效balabalabala',
@@ -70,7 +70,7 @@
     }]
   },
     {
-      filename: 'GB-XX2',
+      fileName: 'GB-XX2',
       standards: [{
         name: '光效',
         content: '路灯的光效balabalabala',
@@ -83,7 +83,7 @@
   ]
 //  模拟数据2（模拟按产品搜索的数据）
   const MOCK_RESULT2 = [{
-    filename: 'GB-XX1',
+    fileName: 'GB-XX1',
     standards: [{
       name: '光效',
       content: '台灯的光效balabalabala',
@@ -102,7 +102,7 @@
     }]
   },
     {
-      filename: 'GB-XX3',
+      fileName: 'GB-XX3',
       standards: [{
         name: '光效',
         content: '路灯的光效balabalabala',
@@ -143,28 +143,34 @@
 //        请求后台数据部分的代码
 //        根据不同的查询情况使用不同的模拟数据
         if (this.args.searchType === 'product') {
-          this.results = MOCK_RESULT2
+//          console.log('product');
+//          this.results = MOCK_RESULT2
           this.showResult = 'product'
+
         } else{
-        	this.results = MOCK_RESULT
+          console.log('others');
+//        	this.results = MOCK_RESULT
           this.showResult = 'others'
         }
+        console.log('showResult:'+this.showResult);
 
-//        axios({
-//          method: 'get',
-//          url: `/search?${this.args.searchType}=${this.args.keywords}`,
-//          headers: {
-//            'Content-Type': 'application/json'
-//          }
-//        })
-//          .then(res => {
-//        	  this.showResult = true
-//            console.log('成功接收到返回的数据:', res)
-//        })
-//          .catch(err => {
-//          	this.showResult = false
-//            console.log(err)
-//          })
+      axios({
+         method: 'get',
+         url: `http://localhost:8080/api/search?searchType=${this.args.searchType}&keywords=${this.args.keywords}`,
+         headers: {
+           'Content-Type': 'application/json'
+         }
+       })
+         .then(res => {
+           //this.showResult = true
+           this.results=res.data.data;
+           console.log('成功接收到返回的数据:', res)
+           console.log(JSON.stringify(this.results));
+       })
+         .catch(err => {
+             this.showResult = false
+           console.log(err)
+         })
       }
     }
   }
