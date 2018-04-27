@@ -19,31 +19,41 @@
       </el-col>
     </el-row>
     <div class="result-container" v-if="showResult === 'others'">
-      <el-container class="result" v-for="(re,index) in results" :key="index">
+      <el-container class="result" v-for="(re,index) in results.searchResult" :key="index">
         <el-header height="40px">所在文档：{{re.fileName}}</el-header>
         <el-main>{{re.standards[0].content}}</el-main>
-        <el-footer height="23px">所在章节：{{re.standards[0].index}}</el-footer>
+        <el-footer height="auto">所在章节：{{re.standards[0].index}}</el-footer>
       </el-container>
     </div>
-    <div class="result-container" v-if="showResult === 'product'">
-      <el-container class="result" v-for="(re,index) in results" :key="index">
-        <el-header height="40px">标准文档：{{re.fileName}}</el-header>
-        <el-main>
-          <div class="std-container">
-            指标：
-            <div v-for="std in re.standards" class="std-box">
-              {{std.name}}
+    <div class="product-container" v-if="showResult === 'product'">
+      <div class="left-container">
+        <el-container class="result" v-for="(re,index) in results.searchResult" :key="index">
+          <el-header height="40px">标准文档：{{re.fileName}}</el-header>
+          <el-main>
+            <div class="std-container">
+              指标：
+              <div v-for="std in re.standards" class="std-box">
+                {{std.name}}
+              </div>
             </div>
+          </el-main>
+          <el-footer height="auto">
+            <div class="ref-container">
+              引用标准：
+              <div class="ref-box" v-for="ref in re.references">
+                {{ref.name}}
+              </div>
+            </div>
+          </el-footer>
+        </el-container>
+      </div>
+      <el-container class="right-container" v-if="results.relatedResult.length">
+        <el-header height="20px">相关标准</el-header>
+        <el-main>
+          <div class="related-container" v-for="(re,index) in results.relatedResult" :key="index" @click="jumpToDetail(re)">
+            {{re.cName}}
           </div>
         </el-main>
-        <el-footer height="23px">
-          <div class="ref-container">
-            引用标准：
-            <div class="ref-box" v-for="ref in re.references">
-              {{ref.name}}
-            </div>
-          </div>
-        </el-footer>
       </el-container>
     </div>
   </div>
@@ -51,78 +61,16 @@
 
 <script>
   import axios from 'axios'
+  import ElContainer from "../../node_modules/element-ui/packages/container/src/main"
 //  下拉框的选项配置
   const TYPES_OPTIONS = [
     {label: '按产品搜索', value: 'product'},
     {label: '按指标搜索', value: 'norm'},
     {label: '混合搜索', value: 'mixing'}
   ]
-//  模拟数据(模拟按指标搜索，按产品搜索的数据)
-  const MOCK_RESULT = [{
-    fileName: 'GB-XX1',
-    standards: [{
-      name: '光效',
-      content: '台灯的光效balabalabala',
-      index: '3.1'
-    }],
-    references: [{
-      name: 'GB-XX2'
-    }]
-  },
-    {
-      fileName: 'GB-XX2',
-      standards: [{
-        name: '光效',
-        content: '路灯的光效balabalabala',
-        index: '3.4'
-      }],
-      references: [{
-        name: 'GB-XX3'
-      }]
-    }
-  ]
-//  模拟数据2（模拟按产品搜索的数据）
-  const MOCK_RESULT2 = [{
-    fileName: 'GB-XX1',
-    standards: [{
-      name: '光效',
-      content: '台灯的光效balabalabala',
-      index: '3.1'
-    }, {
-      name: '寿命',
-      content: '台灯的寿命balabalabala',
-      index: '3.2'
-    }, {
-      name: '外观',
-      content: '台灯的外观balabalabala',
-      index: '3.3'
-    }],
-    references: [{
-      name: 'GB-XX2'
-    }]
-  },
-    {
-      fileName: 'GB-XX3',
-      standards: [{
-        name: '光效',
-        content: '路灯的光效balabalabala',
-        index: '3.4'
-      }, {
-        name: '寿命',
-        content: '路灯的寿命balabalabala',
-        index: '3.2'
-      }, {
-        name: '外观',
-        content: '路灯的外观balabalabala',
-        index: '3.1'
-      }],
-      references: [{
-        name: 'GB-XX5'
-      }]
-    }
-  ]
   export default {
-  	name: 'result',
+    components: {ElContainer},
+    name: 'result',
     data: () => {
   		return {
   			args: {
@@ -133,10 +81,14 @@
 //        页面中是否显示结果列表
         showResult: true,
 //        结果列表
-        results: []
+        results: {relatedResult: {}, searchResult: {}}
       }
     },
     methods: {
+//    	跳转到详情页
+      jumpToDetail (re) {
+      	this.$router.push({name: 'detail', params: {id: re.id}, query: {number: re.number}})
+      },
 //  		发送查询数据
   		sendData () {
         console.log('sendData')
@@ -152,23 +104,20 @@
 //        	this.results = MOCK_RESULT
           this.showResult = 'others'
         }
-        console.log('showResult:'+this.showResult);
 
       axios({
          method: 'get',
-         url: `http://localhost:8080/api/search?searchType=${this.args.searchType}&keywords=${this.args.keywords}`,
+         url: `http://116.56.140.85:8080/api/search?searchType=${this.args.searchType}&keywords=${this.args.keywords}`,
          headers: {
            'Content-Type': 'application/json'
          }
        })
          .then(res => {
            //this.showResult = true
-           this.results=res.data.data;
-           console.log('成功接收到返回的数据:', res)
-           console.log(JSON.stringify(this.results));
+           this.results=res.data.data
        })
          .catch(err => {
-             this.showResult = false
+           this.showResult = 'others'
            console.log(err)
          })
       }
@@ -179,15 +128,37 @@
 <style>
   section.el-container.result.is-vertical {
     margin: 10px;
-    box-shadow: 5px 5px 10px #e4e4e4;
+    box-shadow: 0 0 10px #e4e4e4;
     padding: 20px 20px;
     text-align: left;
   }
   .std-container, .ref-container {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
   }
   .std-box, .ref-box {
     margin: 0 10px;
+  }
+  .product-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .left-container {
+    width: 70%;
+  }
+  .right-container {
+    width: 25%;
+    margin: 10px;
+    box-shadow: 0 0 10px #e4e4e4;
+    padding: 20px 20px;
+    text-align: left;
+    color: #409EFF;
+  }
+  .related-container {
+    margin: 10px;
+    color: #606266;
   }
 </style>
