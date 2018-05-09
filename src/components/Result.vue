@@ -29,16 +29,23 @@
       </el-container>
     </div>
     <div class="full-text-container" v-if="showResult === 'fullText'">
-      <el-container class="result" v-for="(re,index) in results.searchResult" :key="index">
+      <el-container class="result" v-for="(re,index) in currentSearchResult" :key="index">
         <el-header height="20px">所在文档：<span @click="jumpToDetail(re)" class="file-name-span">{{re.fileName}}</span></el-header>
         <el-main>
           <div v-for="(content,index) in re.contents" :key="index" v-html="content"></div>
         </el-main>
       </el-container>
+      <self-pagination 
+          :result="results.searchResult"
+          :currentPage="pagination.currentPage"
+          :pageSize="pagination.pageSize"
+          :small="pagination.small"
+          @currentChange='handleCurrentChange'>
+        </self-pagination>
     </div>
     <div class="product-container" v-if="showResult === 'product'">
       <div class="left-container">
-        <el-container class="result" v-for="(re,index) in results.searchResult" :key="index">
+        <el-container class="result" v-for="(re,index) in currentSearchResult" :key="index">
           <el-header height="auto">
             <el-row>
               <el-col :span="3">标准文档：</el-col>
@@ -79,13 +86,27 @@
             </el-row>
           </el-footer>
         </el-container>
+        <self-pagination 
+          :result="results.searchResult"
+          :currentPage="pagination.currentPage"
+          :pageSize="pagination.pageSize"
+          :small="pagination.small"
+          @currentChange='handleCurrentChange'>
+        </self-pagination>
       </div>
       <el-container class="right-container" v-if="results.relatedResult.length">
         <el-header height="20px">相关标准</el-header>
         <el-main>
-          <a class="related-container" v-for="(re,index) in results.relatedResult" :key="index" @click="jumpToDetail(re)">
+          <a class="related-container" v-for="(re,index) in currentRelatedResult" :key="index" @click="jumpToDetail(re)">
             {{re.cName}}
           </a>
+        <self-pagination 
+          :result="results.relatedResult"
+          :currentPage="relatedResultPagination.currentPage"
+          :pageSize="relatedResultPagination.pageSize"
+          :small="relatedResultPagination.small"
+          @currentChange='handleRelatedResultCurrentChange'>
+        </self-pagination>
         </el-main>
       </el-container>
     </div>
@@ -96,6 +117,7 @@
 import axios from "axios";
 import config from "@/config/config.js";
 import ElContainer from "../../node_modules/element-ui/packages/container/src/main";
+import SelfPagination from "@/components/SelfPagination.vue"
 //  下拉框的选项配置
 const TYPES_OPTIONS = [
   { label: "按产品搜索", value: "product" },
@@ -116,7 +138,7 @@ const MOCK_RESULT = {
   ]
 };
 export default {
-  components: { ElContainer },
+  components: { ElContainer,SelfPagination },
   name: "result",
   data: () => {
     return {
@@ -128,7 +150,17 @@ export default {
       //        页面中是否显示结果列表
       showResult: true,
       //        结果列表
-      results: { relatedResult: {}, searchResult: {} }
+      results: { relatedResult: [], searchResult: []},
+      pagination:{
+        currentPage:1,
+        pageSize:5,
+        small: false
+      },
+      relatedResultPagination:{
+        currentPage:1,
+        pageSize:25,
+        small: true
+      }
     };
   },
   mounted(){
@@ -178,6 +210,8 @@ export default {
           this.results = res.data.data;
           //将查询参数添加到url,供返回功能使用
           this.$router.replace(`/search?searchType=${this.args.searchType}&keywords=${this.args.keywords}`);
+          //当前页重置为1
+          this.pagination.currentPage=1;
         })
         .catch(err => {
           this.showResult = "others";
@@ -186,6 +220,26 @@ export default {
     },
     goSeniorSearch (){
       this.$router.push('/advancedSearch');
+    },
+    handleCurrentChange(val){
+      this.pagination.currentPage=val;
+    },
+    handleRelatedResultCurrentChange(val){
+      this.relatedResultPagination.currentPage=val;
+    }
+  },
+  computed:{
+    currentSearchResult(){
+      let pagination=this.pagination;
+      let begin=(pagination.currentPage-1)*pagination.pageSize;
+      let end=pagination.currentPage*pagination.pageSize;
+      return this.results.searchResult.slice(begin,end);
+    },
+    currentRelatedResult(){
+      let pagination=this.relatedResultPagination;
+      let begin=(pagination.currentPage-1)*pagination.pageSize;
+      let end=pagination.currentPage*pagination.pageSize;
+      return this.results.relatedResult.slice(begin,end);
     }
   }
 };

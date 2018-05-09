@@ -2,7 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import Result from '@/components/Result'
 import Detail from '@/views/Detail'
-import SeniorSearch from '@/views/SeniorSearch'
+import AdvancedSearch from '@/views/AdvancedSearch'
 
 Vue.use(Router)
 
@@ -17,10 +17,10 @@ export default new Router({
       path: '/detail',
       name: 'detail',
       component: Detail
-    },{
+    }, {
       path: '/advancedSearch',
-      name: 'senior-search',
-      component: SeniorSearch
+      name: 'advanced-search',
+      component: AdvancedSearch
     }
   ]
 })
