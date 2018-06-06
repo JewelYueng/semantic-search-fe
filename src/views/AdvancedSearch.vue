@@ -1,5 +1,6 @@
 <template>
   <div>
+    <my-nav></my-nav>
     <div id="search-div">
       <el-row justify="center" :gutter="10" align="middle" type="flex">
         <el-col :span="2" class="search-label">标准号</el-col>
@@ -94,6 +95,7 @@
 <script>
   import axios from 'axios';
   import config from "@/config/config.js";
+  import MyNav from '@/components/MyNav'
   const MOCK_RESULT = [{
     number: 'GB 7000.211-2008',
     cName: '灯具 第2-11部分:特殊要求 水族箱灯具',
@@ -109,6 +111,7 @@
     NST: "未现行"
   };
   export default {
+    components: {MyNav},
     data() {
       return {
         standardForm: {

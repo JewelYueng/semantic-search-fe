@@ -1,5 +1,6 @@
 <template>
   <div id="result-page">
+    <my-nav></my-nav>
     <el-row class="search-box" type="flex" justify="center" :gutter="10" align="middle">
       <el-col :span="4">
         <el-select v-model="args.searchType" placeholder="请选择搜索类型">
@@ -118,6 +119,7 @@ import axios from "axios";
 import config from "@/config/config.js";
 import ElContainer from "../../node_modules/element-ui/packages/container/src/main";
 import SelfPagination from "@/components/SelfPagination.vue"
+import MyNav from '@/components/MyNav'
 //  下拉框的选项配置
 const TYPES_OPTIONS = [
   { label: "按产品搜索", value: "product" },
@@ -138,7 +140,7 @@ const MOCK_RESULT = {
   ]
 };
 export default {
-  components: { ElContainer,SelfPagination },
+  components: { ElContainer,SelfPagination,MyNav },
   name: "result",
   data: () => {
     return {
@@ -246,6 +248,9 @@ export default {
 </script>
 
 <style>
+.search-box{
+  margin-top: 20px;
+}
 section.el-container.result.is-vertical {
   margin: 10px;
   box-shadow: 0 0 10px #e4e4e4;
